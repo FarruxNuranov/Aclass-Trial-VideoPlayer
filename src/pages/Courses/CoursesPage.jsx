@@ -5,7 +5,7 @@ import { enrollmentsService } from '../../api/services/enrollments'
 import AmeenLogo from '../../assets/Ameen.svg'
 import s from './CoursesPage.module.css'
 
-const IMG_BASE = 'https://ameen-backend.uz/'
+const IMG_BASE = import.meta.env.VITE_IMG_BASE_URL
 
 function IconLogout() {
   return (
