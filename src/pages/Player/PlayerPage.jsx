@@ -4,7 +4,6 @@ import { useAuth } from '../../context/AuthContext'
 import { enrollmentsService } from '../../api/services/enrollments'
 import ModuleList from '../../components/ModuleList/ModuleList'
 import VideoPlayer from '../../components/VideoPlayer/VideoPlayer'
-import Quiz from '../../components/Quiz/Quiz'
 import AmeenLogo from '../../assets/Ameen.svg'
 import s from './PlayerPage.module.css'
 
@@ -20,7 +19,6 @@ function transformModules(apiModules) {
       videoUrl: lesson.video_url ?? '',
       done: lesson.is_completed ?? false,
       duration: '',
-      quiz: [],
     })),
   }))
 }
@@ -56,22 +54,6 @@ function IconPlayOutline() {
   )
 }
 
-function IconVideo() {
-  return (
-    <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-      <path d="m22 8-6 4 6 4V8z" /><rect x="2" y="6" width="14" height="12" rx="2" />
-    </svg>
-  )
-}
-
-function IconQuiz() {
-  return (
-    <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-      <path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
-    </svg>
-  )
-}
-
 export default function PlayerPage() {
   const { enrollmentId } = useParams()
   const { user, logout } = useAuth()
@@ -80,9 +62,7 @@ export default function PlayerPage() {
   const [modules, setModules] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-
   const [activeId, setActiveId] = useState(null)
-  const [activeTab, setActiveTab] = useState('dars')
   const [doneSet, setDoneSet] = useState(new Set())
 
   useEffect(() => {
@@ -91,11 +71,9 @@ export default function PlayerPage() {
       .then(data => {
         const mods = transformModules(data.modules)
         setModules(mods)
-// pre-populate done set from API
         const done = new Set()
         mods.forEach(m => m.episodes.forEach(ep => { if (ep.done) done.add(ep.id) }))
         setDoneSet(done)
-        // auto-select first episode
         if (mods.length > 0 && mods[0].episodes.length > 0) {
           setActiveId(mods[0].episodes[0].id)
         }
@@ -123,22 +101,9 @@ export default function PlayerPage() {
   const hasPrev = activeIndex > 0
   const hasNext = activeIndex >= 0 && activeIndex < allEpisodes.length - 1
 
-  function handleSelect(ep) {
-    setActiveId(ep.id)
-    setActiveTab('dars')
-  }
-
-  function handlePrev() {
-    if (hasPrev) { setActiveId(allEpisodes[activeIndex - 1].id); setActiveTab('dars') }
-  }
-
-  function handleNext() {
-    if (hasNext) { setActiveId(allEpisodes[activeIndex + 1].id); setActiveTab('dars') }
-  }
-
-  function handleQuizPass() {
-    if (activeId) setDoneSet(prev => new Set([...prev, activeId]))
-  }
+  function handleSelect(ep) { setActiveId(ep.id) }
+  function handlePrev() { if (hasPrev) setActiveId(allEpisodes[activeIndex - 1].id) }
+  function handleNext() { if (hasNext) setActiveId(allEpisodes[activeIndex + 1].id) }
 
   function handleLogout() {
     logout()
@@ -188,12 +153,7 @@ export default function PlayerPage() {
             </button>
             <div className={s.navLogo}>
               <img src={AmeenLogo} alt="Aclass.uz" className={s.navLogoImg} />
-              <h2
-                style={ {
-            marginLeft: '8px',
-            fontSize: '25px',
-            color: '#333',
-          }}>Aclass.uz</h2>
+              <h2 style={{ marginLeft: '8px', fontSize: '25px', color: '#333' }}>Aclass.uz</h2>
             </div>
           </div>
           <div className={s.navRight}>
@@ -209,40 +169,13 @@ export default function PlayerPage() {
 
         <div className={s.content}>
           {activeEpisode ? (
-            <>
-              <div className={s.tabs}>
-                <button
-                  className={`${s.tab} ${activeTab === 'dars' ? s.tabActive : ''}`}
-                  onClick={() => setActiveTab('dars')}
-                >
-                  <IconVideo /> Dars
-                </button>
-                <button
-                  className={`${s.tab} ${activeTab === 'test' ? s.tabActive : ''}`}
-                  onClick={() => setActiveTab('test')}
-                >
-                  <IconQuiz />
-                  Test
-                  {activeEpisode.done && <span className={s.tabDoneDot} />}
-                </button>
-              </div>
-
-              {activeTab === 'dars' ? (
-                <VideoPlayer
-                  episode={activeEpisode}
-                  onPrev={handlePrev}
-                  onNext={handleNext}
-                  hasPrev={hasPrev}
-                  hasNext={hasNext}
-                />
-              ) : (
-                <Quiz
-                  key={activeId}
-                  episode={activeEpisode}
-                  onPass={handleQuizPass}
-                />
-              )}
-            </>
+            <VideoPlayer
+              episode={activeEpisode}
+              onPrev={handlePrev}
+              onNext={handleNext}
+              hasPrev={hasPrev}
+              hasNext={hasNext}
+            />
           ) : (
             <div className={s.empty}>
               <div className={s.emptyIcon}><IconPlayOutline /></div>

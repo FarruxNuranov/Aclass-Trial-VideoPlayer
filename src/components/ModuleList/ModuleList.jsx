@@ -9,15 +9,6 @@ function IconChevron() {
   )
 }
 
-function IconSearch() {
-  return (
-    <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-      <circle cx="11" cy="11" r="8" />
-      <path d="m21 21-4.35-4.35" />
-    </svg>
-  )
-}
-
 function IconCheck() {
   return (
     <svg width="10" height="10" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
@@ -37,29 +28,26 @@ function IconPlay() {
 export default function ModuleList({ modules, activeEpisodeId, onSelect }) {
   const [openModules, setOpenModules] = useState(() => {
     const initial = {}
-    modules.forEach((m, i) => { initial[m.id] = i === 0 })
+    modules.forEach(m => { initial[m.id] = true })
     return initial
   })
-  const [search, setSearch] = useState('')
-
   function toggleModule(id) {
     setOpenModules(prev => ({ ...prev, [id]: !prev[id] }))
   }
 
   const { filtered, totalEpisodes, doneEpisodes } = useMemo(() => {
-    const q = search.toLowerCase()
     let total = 0
     let done = 0
     const filtered = modules.map(m => {
       const episodes = m.episodes.filter(ep => {
         total++
         if (ep.done) done++
-        return !q || ep.title.toLowerCase().includes(q) || m.name.toLowerCase().includes(q)
+        return true
       })
       return { ...m, episodes }
-    }).filter(m => m.episodes.length > 0)
+    })
     return { filtered, totalEpisodes: total, doneEpisodes: done }
-  }, [modules, search])
+  }, [modules])
 
   const progressPct = totalEpisodes ? Math.round((doneEpisodes / totalEpisodes) * 100) : 0
 
@@ -67,30 +55,12 @@ export default function ModuleList({ modules, activeEpisodeId, onSelect }) {
     <aside className={s.sidebar}>
       <div className={s.header}>
         <div className={s.headerTitle}>Kurs dasturi</div>
-        <div className={s.searchBox}>
-          <span className={s.searchIcon}><IconSearch /></span>
-          <input
-            className={s.searchInput}
-            placeholder="Dars qidirish..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-          />
-        </div>
       </div>
 
-      <div className={s.progress}>
-        <div className={s.progressLabel}>
-          <span>Jarayon</span>
-          <span className={s.progressCount}>{doneEpisodes}/{totalEpisodes} dars</span>
-        </div>
-        <div className={s.progressBar}>
-          <div className={s.progressFill} style={{ width: `${progressPct}%` }} />
-        </div>
-      </div>
 
       <div className={s.list}>
         {filtered.map((module, mi) => {
-          const isOpen = search ? true : !!openModules[module.id]
+          const isOpen = !!openModules[module.id]
           const hasActive = module.episodes.some(ep => ep.id === activeEpisodeId)
           const doneCnt = module.episodes.filter(ep => ep.done).length
 
